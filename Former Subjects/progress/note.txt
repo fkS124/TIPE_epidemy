@@ -1,0 +1,12 @@
+Premier resultat : on capte tous les points à peu près blancs
+
+Deuxième résultat : on diminue la résolution, on prend que les tiers inférieurs latéraux, 
+et on ne prend pas en compte les points qui n'ont pas de voisins dans un certain rayon, on 
+ajoute avec une regression linéaire une modélisation de la ligne -> ne fonctionne pas ! car 
+beaucoup trop de bruit.
+
+Troisième résultat : on calcule la densité moyenne par région : on calcule le rapport du 
+nombre de voisins détectés comme sur la ligne sur le nombre total de voisin, et on colorie
+en fonction de la densité calculée, du peu dense (vert très foncé) au très dense (vert clair)
+ensuite on prend les N points les plus denses à droite et à gauche et on fait une régression
+linéaire. On modélise ensuite la ligne par une droite : y = ax + b
