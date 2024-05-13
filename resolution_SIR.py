@@ -1,167 +1,148 @@
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
-
-# Définir le graphe
-fig, ax = plt.subplots()
-plt.subplots_adjust(bottom=0.3)
-
-# Définir les paramètres
-beta = 0.3  # Taux de transmission
-gamma = 0.1  # Taux de récupération
-delta = 0.01  # Taux de décès
-
-# Conditions initiales
-S0 = 0.899  # Population initialement susceptible
-I0 = 0.001  # Population initialement infectée
-R0 = 0.1  # Population initialement retirée
-M0 = 0  # Population initialement morte
+from matplotlib.widgets import Slider, TextBox
 
 
-# Définir le système d'équations différentielles
-def deriv(y, t, beta, gamma, delta):
-    S, I, R, M = y
-    dSdt = -beta * S * I
-    dIdt = beta * S * I - gamma * I - delta * I
-    dRdt = gamma * I
-    dMdt = delta * I
-    return [dSdt, dIdt, dRdt, dMdt]
+class GrapheDynamique:
+
+    def __init__(self):
+        self.fig, self.ax = plt.subplots()
+        plt.subplots_adjust(bottom=0.35)
+        self.coefficient = 1.0
+
+        # Initialisation du solveur
+        self.solveur = SolveurSIR()
+
+        # Créer les boîte de texte pour les coefficient
+        self.textboxS = CoeffTextBox(self, [0.2, 0.20, 0.1, 0.04], "S0 ",
+                                     self.solveur.DEFAULT_S0, self.solveur, "s0")
+        self.textboxI = CoeffTextBox(self, [0.2, 0.15, 0.1, 0.04], "I0 ",
+                                     self.solveur.DEFAULT_I0, self.solveur, "i0")
+        self.textboxR = CoeffTextBox(self, [0.2, 0.10, 0.1, 0.04], "R0 ",
+                                     self.solveur.DEFAULT_R0, self.solveur, "r0")
+        self.textboxD = CoeffTextBox(self, [0.2, 0.05, 0.1, 0.04], "M0 ",
+                                     self.solveur.DEFAULT_M0, self.solveur, "m0")
+        self.textboxBeta = CoeffTextBox(self, [0.45, 0.20, 0.1, 0.04], "Beta ",
+                                        self.solveur.DEFAULT_BETA, self.solveur, "beta")
+        self.textboxGamma = CoeffTextBox(self, [0.45, 0.15, 0.1, 0.04], "Gamma ",
+                                         self.solveur.DEFAULT_GAMMA, self.solveur, "gamma")
+        self.textboxDelta = CoeffTextBox(self, [0.45, 0.10, 0.1, 0.04], "Delta ",
+                                         self.solveur.DEFAULT_DELTA, self.solveur, "delta")
+        self.textboxDeltaT = CoeffTextBox(self, [0.75, 0.20, 0.1, 0.04], "Durée exp ",
+                                          self.solveur.stop, self.solveur, "stop")
+        self.textboxResolution = CoeffTextBox(self, [0.75, 0.15, 0.1, 0.04], "Résolution ",
+                                              self.solveur.n_points, self.solveur, "n_points")
+
+        self.lS, = self.ax.plot(self.solveur.t, self.solveur.s, label="Susceptible")
+        self.lI, = self.ax.plot(self.solveur.t, self.solveur.i, label="Infectés")
+        self.lR, = self.ax.plot(self.solveur.t, self.solveur.r, label="Remis")
+        self.lM, = self.ax.plot(self.solveur.t, self.solveur.m, label="Morts")
+
+    def update_courbes(self):
+        # TODO : faire changer les abscisses du graphe (ne fonctionne pas)
+        self.lS.set_xdata(self.solveur.t)
+        self.lS.set_ydata(self.solveur.s)
+        self.lI.set_xdata(self.solveur.t)
+        self.lI.set_ydata(self.solveur.i)
+        self.lR.set_xdata(self.solveur.t)
+        self.lR.set_ydata(self.solveur.r)
+        self.lM.set_xdata(self.solveur.t)
+        self.lM.set_ydata(self.solveur.m)
+        self.fig.canvas.draw_idle()
+
+    def show(self):
+        self.ax.grid()
+        self.ax.legend()
+        plt.show()
 
 
-# Temps
-t = np.linspace(0, 200, 1000)
+class SolveurSIR:
 
-# Conditions initiales regroupées
-y0 = [S0, I0, R0, M0]
+    # Définir les paramètres
+    DEFAULT_BETA = 0.3  # Taux de transmission
+    DEFAULT_GAMMA = 0.1  # Taux de récupération
+    DEFAULT_DELTA = 0.01  # Taux de décès
 
-# Résoudre les équations différentielles
-solution = odeint(deriv, y0, t, args=(beta, gamma, delta))
+    # Conditions initiales
+    DEFAULT_S0 = 0.899  # Population initialement susceptible
+    DEFAULT_I0 = 0.001  # Population initialement infectée
+    DEFAULT_R0 = 0.1  # Population initialement retirée
+    DEFAULT_M0 = 0  # Population initialement morte
 
-# Tracer les résultats
-lS, = ax.plot(t, solution[:, 0], label='Susceptible')
-lI, = ax.plot(t, solution[:, 1], label='Infecté')
-lR, = ax.plot(t, solution[:, 2], label='Retiré')
-lM, = ax.plot(t, solution[:, 3], label='Mort')
+    def __init__(self):
 
-plt.grid()
-plt.xlabel('Temps')
-plt.ylabel('Population')
-plt.legend()
+        # Paramètres de temps
+        self.start, self.stop, self.n_points = 0, 200, 1000
 
-# Initialisation de l'interface utilisateur
+        # Caractéristiques de l'épidémie
+        self.s0, self.i0, self.r0, self.m0 = (self.DEFAULT_S0, self.DEFAULT_I0,
+                                              self.DEFAULT_R0, self.DEFAULT_M0)
+        self.beta, self.gamma, self.delta = self.DEFAULT_BETA, self.DEFAULT_GAMMA, self.DEFAULT_DELTA
 
-ax_slider_S = plt.axes([0.10, 0.15, 0.30, 0.03])
-slider_S = Slider(ax_slider_S, 'S0', 0, 1, valinit=S0)
+        # Courbes des différentes classes
+        self.s, self.i, self.r, self.m = tuple([np.array([])]*4)  # ordonnées
+        self.t = np.linspace(self.start, self.stop, self.n_points)
 
-ax_slider_R = plt.axes([0.10, 0.10, 0.30, 0.03])
-slider_R = Slider(ax_slider_R, 'R0', 0, 1, valinit=R0)
+        # On remplit les listes en résolvant le système avec les valeurs par défaut
+        self.solve_equation()
 
-ax_slider_I = plt.axes([0.10, 0.05, 0.30, 0.03])
-slider_I = Slider(ax_slider_I, 'I0', 0, 1, valinit=I0)
+    @staticmethod
+    def deriv(y, t, beta, gamma, delta):
+        S, I, R, M = y
+        dSdt = -beta * S * I
+        dIdt = beta * S * I - gamma * I - delta * I
+        dRdt = gamma * I
+        dMdt = delta * I
+        return [dSdt, dIdt, dRdt, dMdt]
 
-ax_slider_gamma = plt.axes([0.60, 0.05, 0.30, 0.03])
-slider_gamma = Slider(ax_slider_gamma, 'gamma', 0, 1, valinit=gamma)
+    def solve_equation(self):
+        # Temps
+        self.t = np.linspace(self.start, self.stop, self.n_points)
 
-ax_slider_beta = plt.axes([0.60, 0.10, 0.30, 0.03])
-slider_beta = Slider(ax_slider_beta, 'beta', 0, 1, valinit=beta)
+        # Conditions initiales regroupées
+        y0 = [self.s0, self.i0, self.r0, self.m0]
 
-ax_slider_delta = plt.axes([0.60, 0.15, 0.30, 0.03])
-slider_delta = Slider(ax_slider_delta, 'delta', 0, 0.1, valinit=delta)
+        # Résoudre les équations différentielles
+        solution = odeint(self.deriv, y0, self.t, args=(self.beta, self.gamma, self.delta))
 
-
-def normalize_variables(var1, var2, var3):
-    """
-    L'objectif de cette fonction est d'imposer var1,
-    et de changer var2 et var3 pour imposer var1 + var2 + var3 = 1
-    """
-    """dvar = (var1 - (1 - var2 - var3)) / 2
-    var2 -= dvar
-    var3 -= dvar
-    if var2 < 0:
-        var3 += var2
-        var2 = 0
-    elif var3 < 0:
-        var2 += var3
-        var3 = 0"""
-    return var1, var2, var3
+        # On met à jour les ordonnées
+        self.s = solution[:, 0]
+        self.i = solution[:, 1]
+        self.r = solution[:, 2]
+        self.m = solution[:, 3]
 
 
-def update_all_slider(S, I, R):
-    slider_S.eventson = False
-    slider_I.eventson = False
-    slider_R.eventson = False
-    slider_S.set_val(S)
-    slider_I.set_val(I)
-    slider_R.set_val(R)
-    slider_S.eventson = True
-    slider_I.eventson = True
-    slider_R.eventson = True
+class CoeffTextBox(TextBox):
+
+    def __init__(self,
+                 graphe: GrapheDynamique,
+                 coordinates: list[float],
+                 label: str,
+                 default: float,
+                 solveur: SolveurSIR,
+                 var: str):
+        super().__init__(plt.axes(coordinates), label, initial=str(default))
+        super().on_submit(self.update_value)
+
+        # Récupération de l'addresse du solveur
+        self.solveur = solveur
+        # Récupération du nom de la variable à changer
+        self.var = var
+        # Récupération du graphe pour les mises à jour
+        self.graphe = graphe
+
+    def update_value(self, text):
+        try:
+            value = float(text)
+            setattr(self.solveur, self.var, value)
+
+        except ValueError:
+            print("Illegal value entered.")
+        self.solveur.solve_equation()
+        self.graphe.update_courbes()
 
 
-def update_beta(val):
-    global beta
-    beta = val
-    solve_equation()
-
-
-def update_gamma(val):
-    global gamma
-    gamma = val
-    solve_equation()
-
-
-def update_delta(val):
-    global delta
-    delta = val
-    solve_equation()
-
-
-def update_S0(val):
-    global S0, I0, R0
-    S0, I0, R0 = normalize_variables(val, I0, R0)
-    update_all_slider(S0, I0, R0)
-    solve_equation()
-
-
-def update_I0(val):
-    global S0, I0, R0
-    I0, R0, S0 = normalize_variables(val, R0, S0)
-    update_all_slider(S0, I0, R0)
-    solve_equation()
-
-
-def update_R0(val):
-    global S0, I0, R0
-    R0, I0, S0 = normalize_variables(val, I0, S0)
-    update_all_slider(S0, I0, R0)
-    solve_equation()
-
-
-def solve_equation():
-    # Temps
-    t = np.linspace(0, 200, 1000)
-
-    # Conditions initiales regroupées
-    y0 = [S0, I0, R0, M0]
-
-    # Résoudre les équations différentielles
-    solution = odeint(deriv, y0, t, args=(beta, gamma, delta))
-
-    # Mettre à jour les valeurs sur le graphe
-    lS.set_ydata(solution[:, 0])
-    lI.set_ydata(solution[:, 1])
-    lR.set_ydata(solution[:, 2])
-    lM.set_ydata(solution[:, 3])
-    fig.canvas.draw_idle()
-
-
-# Assignation des fonctions de miser à jour
-slider_S.on_changed(update_S0)
-slider_R.on_changed(update_R0)
-slider_I.on_changed(update_I0)
-slider_gamma.on_changed(update_gamma)
-slider_beta.on_changed(update_beta)
-slider_delta.on_changed(update_delta)
-
-plt.show()
+if __name__ == '__main__':
+    grapheDy = GrapheDynamique()
+    grapheDy.show()

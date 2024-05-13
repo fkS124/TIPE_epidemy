@@ -7,7 +7,7 @@ import numpy as np
 
 def generate_epidemies(N: int, consts: list[float | None], start: float = 0.0,
                        stop: float = 1.0) -> list[dict[str, float]]:
-    # Création des points entre 0 et 1 avec un pas de step
+    # Création des N points entre 0 et 1
     points = np.linspace(start, stop, N)
     # On récupère le nombre de valeurs à faire varier
     n = consts.count(None)
@@ -91,7 +91,7 @@ def graphe_resultats(stats: dict[str, float]) -> None:
 
 def simulations(N, size=100, iterations=40):
     # Générations des différentes caractéristiques d'épidémies
-    L_epidemies = generate_epidemies(N, consts=[0.99, 0.01, .0, 0.01, None, None], start=0.00, stop=1.0)
+    L_epidemies = generate_epidemies(N, consts=[0.5, 0.5, .0, 0.01, None, None], start=0.00, stop=1.0)
 
     # Simulation et formatage des résultats
     resultats = [{

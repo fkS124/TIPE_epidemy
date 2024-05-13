@@ -7,11 +7,11 @@ dxy_transmission = [(-1, -1), (-1, 0), (-1, 1),
                     (1, -1), (1, 0), (1, 1)]
 
 default_epidemy = {
-    "S": 0.99,  # Prop initiale de Susceptibles d'être infectés
-    "I": 0.01,  # Prop initiale d'Infectés
+    "S": 0.999,  # Prop initiale de Susceptibles d'être infectés
+    "I": 0.001,  # Prop initiale d'Infectés
     "R": 0.0,  # Prop initiale d'insensibles à la Réinfection
     "D": 0.0,  # Prop initiale de mort (Dead)
-    "beta": 0.4,  # Taux de transmission
+    "beta": 0.1,  # Taux de transmission
     "gamma": 0.3,  # Taux de récupération
     "delta": 0.01  # Taux de décès
 }
