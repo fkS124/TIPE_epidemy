@@ -1,39 +1,19 @@
-%matplotlib qt
-
-from time import sleep
-
 import matplotlib.pyplot as plt
-import numpy as np
 
-# On active le mode interactif
-plt.ion()   # ion => interactive on / ioff => interactive off
+# Exemple de données
+x = [1, 2, 3, 4, 5]
+y = [10, 20, 25, 30, 35]
 
-# Créer des données de test et la figure associée
-x = np.linspace(0, 10, 100)
-y1 = np.cos(x)
-y2 = np.sin(x)
+# Tracer le graphique
+plt.plot(x, y)
 
-fig, ax = plt.subplots()
-ax.plot(x, y1, label="Cosinus")
-ax.plot(x, y2, label="Sinus")
+# Définir les nouvelles valeurs de l'axe des x et des étiquettes
+nouvelles_valeurs_x = [1, 2, 3, 4, 5]
+nouvelles_etiquettes_x = ['a', 'b', 'c', 'd', 'e']
 
-# Afficher la figure de manière non bloquante
-plt.show(block=False)
-plt.pause(2)
+# Changer les valeurs et les étiquettes de l'axe des x
+plt.gca().set_xticks(nouvelles_valeurs_x)
+plt.gca().set_xticklabels(nouvelles_etiquettes_x)
 
-# Récupérer la liste des objets Line2D
-lines = ax.get_lines()
-
-# Trouver l'objet Line2D correspondant à la courbe 'Sinus'
-for line in lines:
-    if line.get_label() == "Sinus":
-        # Changer la couleur de la ligne en rouge
-        line.set_color("Red")
-        plt.draw()
-        break
-
-plt.legend()
-plt.pause(2)
-
-plt.ioff()
+# Afficher le graphique
 plt.show()
