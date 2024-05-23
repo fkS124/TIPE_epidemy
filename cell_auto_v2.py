@@ -74,7 +74,7 @@ def simule(epidemy: dict[str, float], size: int = 200, iterations: int = 10) -> 
     return all_etats
 
 
-def animate(liste_etats):
+def animate(liste_etats: list[np.array]) -> None:
     # Couleurs associées à chaque chiffre
     colors = [(0, 1, 0), (1, 0, 0), (0, 0, 1), 'black']
 

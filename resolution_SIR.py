@@ -1,12 +1,12 @@
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-from matplotlib.widgets import TextBox
+from matplotlib.widgets import TextBox, CheckButtons
 
 
 class GrapheDynamique:
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Création de la fenêtre
         self.fig, self.ax = plt.subplots()
         plt.subplots_adjust(bottom=0.35)
@@ -15,33 +15,37 @@ class GrapheDynamique:
         self.solveur = SolveurSIR()
 
         # Créer les boîte de texte pour toutes les variables
-        self.textboxS = CoeffTextBox(self, [0.2, 0.20, 0.1, 0.04], "S0 ",
+        self.textboxS = CoeffTextBox(self, [0.15, 0.20, 0.1, 0.04], "S0 ",
                                      self.solveur.DEFAULT_S0, self.solveur, "s0")
-        self.textboxI = CoeffTextBox(self, [0.2, 0.15, 0.1, 0.04], "I0 ",
+        self.textboxI = CoeffTextBox(self, [0.15, 0.15, 0.1, 0.04], "I0 ",
                                      self.solveur.DEFAULT_I0, self.solveur, "i0")
-        self.textboxR = CoeffTextBox(self, [0.2, 0.10, 0.1, 0.04], "R0 ",
+        self.textboxR = CoeffTextBox(self, [0.15, 0.10, 0.1, 0.04], "R0 ",
                                      self.solveur.DEFAULT_R0, self.solveur, "r0")
-        self.textboxD = CoeffTextBox(self, [0.2, 0.05, 0.1, 0.04], "M0 ",
+        self.textboxD = CoeffTextBox(self, [0.15, 0.05, 0.1, 0.04], "M0 ",
                                      self.solveur.DEFAULT_M0, self.solveur, "m0")
-        self.textboxBeta = CoeffTextBox(self, [0.45, 0.20, 0.1, 0.04], "Beta ",
+        self.textboxBeta = CoeffTextBox(self, [0.36, 0.20, 0.1, 0.04], "Beta ",
                                         self.solveur.DEFAULT_BETA, self.solveur, "beta")
-        self.textboxGamma = CoeffTextBox(self, [0.45, 0.15, 0.1, 0.04], "Gamma ",
+        self.textboxGamma = CoeffTextBox(self, [0.36, 0.15, 0.1, 0.04], "Gamma ",
                                          self.solveur.DEFAULT_GAMMA, self.solveur, "gamma")
-        self.textboxDelta = CoeffTextBox(self, [0.45, 0.10, 0.1, 0.04], "Delta ",
+        self.textboxDelta = CoeffTextBox(self, [0.36, 0.10, 0.1, 0.04], "Delta ",
                                          self.solveur.DEFAULT_DELTA, self.solveur, "delta")
-        self.textboxDeltaT = CoeffTextBox(self, [0.75, 0.20, 0.1, 0.04], "Durée exp ",
+        self.textboxDeltaT = CoeffTextBox(self, [0.60, 0.20, 0.1, 0.04], "Durée exp ",
                                           self.solveur.stop, self.solveur, "stop")
-        self.textboxResolution = CoeffTextBox(self, [0.75, 0.15, 0.1, 0.04], "Résolution ",
+        self.textboxResolution = CoeffTextBox(self, [0.60, 0.15, 0.1, 0.04], "Résolution ",
                                               self.solveur.n_points, self.solveur, "n_points")
 
+        self.checkButtonS = CheckButtonCourbe(self, [0.75, 0.20, 0.15, 0.05], "Afficher S", "lS")
+        self.checkButtonI = CheckButtonCourbe(self, [0.75, 0.15, 0.15, 0.05], "Afficher I", "lI")
+        self.checkButtonR = CheckButtonCourbe(self, [0.75, 0.10, 0.15, 0.05], "Afficher R", "lR")
+        self.checkButtonM = CheckButtonCourbe(self, [0.75, 0.05, 0.15, 0.05], "Afficher M", "lM")
+
+        # Tracé initial des courbes
         self.lS, = self.ax.plot(self.solveur.t, self.solveur.s, label="Susceptible")
         self.lI, = self.ax.plot(self.solveur.t, self.solveur.i, label="Infectés")
         self.lR, = self.ax.plot(self.solveur.t, self.solveur.r, label="Remis")
         self.lM, = self.ax.plot(self.solveur.t, self.solveur.m, label="Morts")
 
-        self.update_courbes()
-
-    def update_courbes(self):
+    def update_courbes(self) -> None:
         # Mets à jour toutes les courbes avec les nouvelles données
         self.lS.set_xdata(self.solveur.t)
         self.lS.set_ydata(self.solveur.s)
@@ -57,7 +61,13 @@ class GrapheDynamique:
         self.ax.autoscale_view()
         self.fig.canvas.draw()
 
-    def show(self):
+    def update_legend(self):
+        # Récupérer toutes les lignes visibles et leurs étiquettes
+        lines = [line for line in self.ax.get_lines() if line.get_visible()]
+        labels = [line.get_label() for line in lines]
+        self.ax.legend(lines, labels)
+
+    def show(self) -> None:
         # Affiche une grille en fond
         self.ax.grid()
         # Affiche la légende
@@ -79,7 +89,7 @@ class SolveurSIR:
     DEFAULT_R0 = 0.1  # Population initialement retirée
     DEFAULT_M0 = 0  # Population initialement morte
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         # Paramètres de temps
         self.start, self.stop, self.n_points = 0, 200, 1000
@@ -97,7 +107,7 @@ class SolveurSIR:
         self.solve_equation()
 
     @staticmethod
-    def deriv(y, t, beta, gamma, delta):
+    def deriv(y: np.array, t: np.array, beta: float, gamma: float, delta: float) -> list[float]:
         # Fonction décrivant le système d'équations différentielles
         S, I, R, M = y
         dSdt = -beta * S * I
@@ -106,7 +116,7 @@ class SolveurSIR:
         dMdt = delta * I
         return [dSdt, dIdt, dRdt, dMdt]
 
-    def solve_equation(self):
+    def solve_equation(self) -> None:
         # Temps
         self.t = np.linspace(int(self.start), int(self.stop), int(self.n_points))
 
@@ -131,7 +141,7 @@ class CoeffTextBox(TextBox):
                  label: str,
                  default: float,
                  solveur: SolveurSIR,
-                 var: str):
+                 var: str) -> None:
         # On initialise la classe parente
         super().__init__(plt.axes(coordinates), label, initial=str(default))
         super().on_submit(self.update_value)
@@ -143,7 +153,7 @@ class CoeffTextBox(TextBox):
         # Récupération du graphe pour les mises à jour
         self.graphe = graphe
 
-    def update_value(self, text):
+    def update_value(self, text: str) -> None:
         try:
             value = float(text)
             setattr(self.solveur, self.var, value)
@@ -153,6 +163,58 @@ class CoeffTextBox(TextBox):
             print("Illegal value entered.")
 
 
+class CheckButtonCourbe(CheckButtons):
+
+    def __init__(self,
+                 graphe: GrapheDynamique,
+                 coordinates: list[float],
+                 label: str,
+                 nom_courbe: str):
+        super().__init__(plt.axes(coordinates), [label], [True])
+        super().on_clicked(self.update_courbe)
+        # Récupération du graphe principal
+        self.graphe = graphe
+        # Récupération du nom de la courbe à afficher ou non
+        self.courbe_associee = nom_courbe
+        # Personnalisation de la taille de la case à cocher
+        for rect in self.rectangles:
+            rect.set_x(0.03)
+            rect.set_y(0.1)
+            rect.set_width(0.18)
+            rect.set_height(0.8)
+        for line in self.lines:
+            for ln in line:
+                ln.set_linewidth(2)
+
+    def update_courbe(self, label):
+        courbe = getattr(self.graphe, self.courbe_associee)
+        courbe.set_visible(not courbe.get_visible())
+        self.graphe.update_courbes()
+        self.graphe.update_legend()
+
+
+def afficher_data_covid(graphe, path, label):
+    # Liste pour stocker les données
+    dates, stats = [], []
+
+    # Récupération des données sur le fichier (dont le chemin est un argument)
+    with open(path, "r") as file:
+        # Lecture des lignes
+        lines = file.readlines()
+        # Récupération des données (1ère ligne = légende)
+        for i, line in enumerate(lines[1:]):
+            date, stat = line.split("\t")
+            dates.append(i)
+            stats.append(float(stat))
+
+    # On normalise la donnée
+    stats = (1/max(stats))*np.array(stats)
+
+    # Affichage des données
+    graphe.ax.plot(dates, stats, label=label, color="red")
+
+
 if __name__ == '__main__':
     grapheDy = GrapheDynamique()
+    afficher_data_covid(grapheDy, "Data/cas_covid_cumule_2021-10-15_2022-05-12.txt", "Cas covid cumulés")
     grapheDy.show()

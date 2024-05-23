@@ -5,8 +5,8 @@ from typing import Any
 import numpy as np
 
 
-def generate_epidemies(N: int, consts: list[float | None], start: float = 0.0,
-                       stop: float = 1.0) -> list[dict[str, float]]:
+def generer_epidemies(N: int, consts: list[float | None], start: float = 0.0,
+                      stop: float = 1.0) -> list[dict[str, float]]:
     # Création des N points entre 0 et 1
     points = np.linspace(start, stop, N)
     # On récupère le nombre de valeurs à faire varier
@@ -89,9 +89,9 @@ def graphe_resultats(stats: dict[str, float]) -> None:
     plt.show()
 
 
-def simulations(N, size=100, iterations=40):
+def simulations(N: int, size: int = 100, iterations: int = 40) -> None:
     # Générations des différentes caractéristiques d'épidémies
-    L_epidemies = generate_epidemies(N, consts=[0.5, 0.5, .0, 0.01, None, None], start=0.00, stop=1.0)
+    L_epidemies = generer_epidemies(N, consts=[0.5, 0.5, .0, 0.01, None, None], start=0.00, stop=1.0)
 
     # Simulation et formatage des résultats
     resultats = [{
@@ -109,7 +109,7 @@ def simulations(N, size=100, iterations=40):
 
 
 if __name__ == "__main__":
-    # epidemies = generate_epidemies(step=0.1, consts=[None, None, .0, .01, .5, .3])
+    # epidemies = generer_epidemies(step=0.1, consts=[None, None, .0, .01, .5, .3])
     # print(epidemies)
 
     simulations(20)
