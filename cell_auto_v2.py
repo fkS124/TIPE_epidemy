@@ -108,4 +108,4 @@ def animate(liste_etats: list[np.array]) -> None:
 
 
 if __name__ == "__main__":
-    animate(simule(test_epidemy, size=100, iterations=20))
+    animate(simule(default_epidemy, size=100, iterations=20))
