@@ -40,10 +40,15 @@ class GrapheDynamique:
         self.checkButtonM = CheckButtonCourbe(self, [0.75, 0.05, 0.15, 0.05], "Afficher M", "lM")
 
         # Tracé initial des courbes
-        self.lS, = self.ax.plot(self.solveur.t, self.solveur.s, label="Susceptible")
+        self.lS, = self.ax.plot(self.solveur.t, self.solveur.s, label="Susceptibles")
         self.lI, = self.ax.plot(self.solveur.t, self.solveur.i, label="Infectés")
         self.lR, = self.ax.plot(self.solveur.t, self.solveur.r, label="Remis")
         self.lM, = self.ax.plot(self.solveur.t, self.solveur.m, label="Morts")
+
+        # Modification des graduations de l'axe y
+        self.ax.set_yticks(np.linspace(0, 1, 5))
+        self.ax.set_xlabel("Date")
+        self.ax.set_ylabel("Proportion de la population")
 
     def update_courbes(self) -> None:
         # Mets à jour toutes les courbes avec les nouvelles données
@@ -59,6 +64,7 @@ class GrapheDynamique:
         # Mets à jour l'échelle et la fenêtre
         self.ax.relim()
         self.ax.autoscale_view()
+        self.ax.set_yticks(np.linspace(0, 1, 5))
         self.fig.canvas.draw()
 
     def update_legend(self):
