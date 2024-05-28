@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from matplotlib.colors import ListedColormap
 
 dxy_transmission = [(-1, -1), (-1, 0), (-1, 1),
                     (0, -1), (0, 1),
@@ -10,7 +11,7 @@ default_epidemy = {
     "S": 0.999,  # Prop initiale de Susceptibles d'être infectés
     "I": 0.001,  # Prop initiale d'Infectés
     "R": 0.0,  # Prop initiale d'insensibles à la Réinfection
-    "D": 0.0,  # Prop initiale de mort (Dead)
+    "D": 0.0,  # Prop initiale de morts (Dead)
     "beta": 0.1,  # Taux de transmission
     "gamma": 0.3,  # Taux de récupération
     "delta": 0.01  # Taux de décès
@@ -76,21 +77,35 @@ def simule(epidemy: dict[str, float], size: int = 200, iterations: int = 10) -> 
 
 def animate(liste_etats: list[np.array]) -> None:
     # Couleurs associées à chaque chiffre
-    colors = [(0, 1, 0), (1, 0, 0), (0, 0, 1), 'black']
+    colors = [(0, 1, 0), 'red', 'darkgreen', 'black']
+    # Constante de pause
+    en_pause = False
 
     # Fonction d'animation pour afficher chaque tableau avec la couleur correspondante
     def animate_frame(i):
-        plt.clf()  # Effacer le graphique précédent
-        plt.imshow(liste_etats[i], cmap=plt.cm.colors.ListedColormap(colors))
-        plt.title(f"Itération n°{i + 1}/{len(liste_etats)}")
-        plt.axis('off')  # Désactiver les axes
+        if not en_pause:
+            plt.clf()  # Effacer le graphique précédent
+            plt.imshow(liste_etats[i], cmap=ListedColormap(colors), vmin=0, vmax=3)
+            print(liste_etats[i])
+            plt.title(f"Itération n°{i + 1}/{len(liste_etats)}")
+            plt.axis('off')  # Désactiver les axes
+
+    # Fonction permettant de gérer les évènements, et en particulier pour gérer les pauses
+    def on_click(event):
+        nonlocal en_pause
+        if event.key == "p":
+            en_pause = not en_pause
 
     # Créer l'animation
     fig = plt.figure()
     anim = FuncAnimation(fig, animate_frame, frames=len(liste_etats), interval=200)
 
+    # Activer les touches
+    fig.canvas.mpl_connect("key_press_event", on_click)
+
+    # Lancer l'application
     plt.show()
 
 
 if __name__ == "__main__":
-    animate(simule(default_epidemy, size=100, iterations=50))
+    animate(simule(test_epidemy, size=100, iterations=20))
